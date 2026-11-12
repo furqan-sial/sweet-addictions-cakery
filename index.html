@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sweet Addictions Cakery | Custom Wedding & Celebration Cakes</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<script>tailwind.config={theme:{extend:{colors:{cream:'#FAF7F2',espresso:'#231F20',gold:'#C59B76',blush:'#F3E8E2'},fontFamily:{serif:['"Playfair Display"','Georgia','serif'],sans:['"Plus Jakarta Sans"','system-ui','sans-serif']}}}}</script>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{background:#FAF7F2;color:#231F20;font-family:'Plus Jakarta Sans',system-ui,sans-serif;margin:0}
+h1,h2,h3{font-family:'Playfair Display',Georgia,serif}
+:focus-visible{outline:2px solid #231F20;outline-offset:2px}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/htm@3.1.1/dist/htm.umd.js"></script>
+<script>
+const {useState,useEffect}=React;
+const html=htm.bind(React.createElement);
+
+/* ---------- CONFIG ---------- */
+// "INQUIRY_AND_INVOICE" (default) or "ONLINE_CARD_CHECKOUT" (see PaymentSection)
+const PAYMENT_MODE="INQUIRY_AND_INVOICE";
+const PHONE="+1 909-247-5709";
+const PAGES=["home","menu","customize","about","checkout"];
+const NAV=[["home","Home"],["menu","Menu & Packages"],["customize","Customize"],["about","About & FAQ"]];
+
+/* ---------- DATA ---------- */
+const PKG=[
+ {id:"mini",name:"Mini Cake Package",feeds:"15–24",price:220,tiers:1,serves:24,items:['6" round cake','1 dz cake pops','1 dz cupcakes','1 dz pretzels']},
+ {id:"small",name:"Small Cake Package",feeds:"30–50",price:350,tiers:1,serves:50,items:['10" round cake','1 dz cupcakes','1 dz pretzels','1 dz rice krispies','1 dz cake pops','1 dz oreos']},
+ {id:"large",name:"Large Cake Package",feeds:"50–70",price:475,tiers:2,serves:70,items:['10" x 6" two-tier round cake','2 dz cake pops','2 dz cupcakes','1 dz oreos','1 dz rice krispies']},
+ {id:"jumbo",name:"Jumbo Cake Package",feeds:"80–100",price:835,tiers:3,serves:100,items:['12" x 8" x 6" three-tier round cake','2 dz cake pops','2 dz cupcakes','2 dz pretzels','2 dz oreos','1 dz rice krispies','1 dz strawberries']},
+];
+const CAKES=[
+ {id:"c6",name:'6" round',serves:12,price:130,tiers:1},
+ {id:"c8",name:'8" round',serves:24,price:170,tiers:1},
+ {id:"c10",name:'10" round',serves:35,price:195,tiers:1},
+ {id:"c12",name:'12" round',serves:50,price:215,tiers:1},
+ {id:"t8",name:'Two-tier 8" x 4"',serves:30,price:235,tiers:2},
+ {id:"t10",name:'Two-tier 10" x 6"',serves:50,price:285,tiers:2},
+];
+const FLAV=["Vanilla","Chocolate","Red Velvet","Lemon","Fudge Marble","Strawberry Marble","Strawberry","Carrot Cake","Confetti","Tres Leches"];
+const FILL=["Fresh Strawberries","Fresh Bananas","Raspberry","Guava","Peaches","Cream Cheese","Chocolate Mousse","Vanilla Mousse","Banana Cream","Bavarian Cream","Lemon Cream","Peanut Butter","Cookies and Cream","Dulce de Leche"];
+const DESS=[["Cupcakes",34],["Chocolate Covered Pretzel Rods",30],["Chocolate Covered Oreos",40],["Chocolate Covered Strawberries",45],["Cake Pops",38],["Chocolate Covered Rice Crispy Treats",32],["Chocolate Covered Marshmallows",24]];
+const EVENTS=["Wedding","Quinceañera","Birthday","Baby Shower","Engagement","Gender Reveal","Divorce Cake","Other"];
+const EMAIL="Sweet.addictions.cakery.23@gmail.com";
+const IG="https://www.instagram.com/sweetaddictionscakery";
+const FB="https://www.facebook.com/sweet.addictions.cake";
+const REVIEWS=[
+ {who:"Evalyn Jimenez",text:"She did an absolutely amazing job on our cake, and she made my vision come to life on a simple but gorgeous cake. It was also delicious and the flavor combo was perfect."},
+ {who:"Daniela Tellez",text:"Maira does the most beautiful and delicious cakes"},
+ {who:"Claudia Hondoy",text:"Love Maira’s cake. They are delicious and beautiful. Order your next cake from her, you will not be disappointed."},
+ {who:"Lindsey Long",text:"Maira ALWAYS does an amazing job. Her cakes and desserts are so delicious. She is so sweet and very professional. I am extremely happy with her service."},
+ {who:"Jasmine Ortiz",text:"Maira was very sweet and attentive! We absolutely loved our wedding cake! It was exactly what we wanted!"},
+ {who:"Silvia Bermudez",text:"I ordered a heart shaped cake for my daughter’s birthday. My daughter was very happy with her cake. The flavor of the cake was strawberry marble with dulce de leche filling , it was absolutely delicious"},
+ {who:"Kevin Sargent",text:"Loved working with Maira for our cake for our wedding! Will be using her again for future events!"},
+ {who:"Kelly Mitchell",text:"I been getting my cakes done by her for years now and never had a problem. Very good"},
+];
+const Reviews=({cols="md:grid-cols-2 lg:grid-cols-4"})=>html`<div className=${"grid gap-4 "+cols}>${REVIEWS.map(r=>html`<figure key=${r.who} className="flex flex-col rounded-2xl bg-white p-6">
+ <p className="text-sm font-semibold"><span className="text-gold" aria-hidden="true">★★★★★</span> 5.0 ★</p>
+ <blockquote className="mt-3 flex-1 text-sm leading-relaxed">“${r.text}”</blockquote>
+ <figcaption className="mt-4 text-sm font-semibold">${r.who}<span className="block text-xs font-normal">Google review</span></figcaption>
+</figure>`)}</div>`;
+const FAQ=[
+ ["How far in advance should I place my order?","Please give at least 3 weeks’ notice for custom celebration cakes. Orders within 7 days are possible based on availability, with a $50+ rush fee depending on decor. For Wedding or Quinceañera cakes, we recommend booking at least 6 months in advance."],
+ ["How can I get a quote?","Submit the inquiry/order form and Maira will respond by text or email within 48 hours. Friday–Sunday are the busiest baking days, so weekend inquiries receive replies Monday morning."],
+ ["What is the booking process?","Once pricing and final details are settled, an invoice is emailed to you. A 50% non-refundable deposit is due within 48 hours of invoice creation to secure your date."],
+ ["What forms of payment do you accept?","Zelle, Venmo, or cash. Online card checkout will be available when enabled."],
+ ["Do you deliver?","Delivery is available only for cakes over 2 tiers serving 60+ people, within 50 miles of Ontario, CA. The delivery fee depends on location. All other orders are pickup in Ontario, CA."],
+];
+
+/* ---------- HELPERS ---------- */
+const $=n=>"$"+(Math.round(n*100)/100).toLocaleString(undefined,{minimumFractionDigits:n%1?2:0});
+const daysUntil=d=>d?Math.ceil((new Date(d+"T00:00:00")-new Date().setHours(0,0,0,0))/864e5):null;
+const isRush=d=>{const n=daysUntil(d);return n!==null&&n>=0&&n<=7};
+const BTN="inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-semibold transition disabled:opacity-40 disabled:cursor-not-allowed ";
+const B1=BTN+"bg-gold text-espresso hover:brightness-95";
+const B2=BTN+"border border-espresso text-espresso hover:bg-espresso hover:text-cream";
+const INP="mt-1 w-full rounded-lg border border-gold/60 bg-white px-3 py-2.5 text-sm";
+const CARD="rounded-2xl bg-white p-6 shadow-sm border border-blush";
+
+const Ico=({children})=>html`<span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white p-1 transition duration-200 group-hover:scale-110 group-hover:bg-blush">${children}</span>`;
+const IgIcon=()=>html`<${Ico}><svg viewBox="0 0 24 24" className="h-full w-full" aria-hidden="true"><defs><radialGradient id="igg" cx="30%" cy="107%" r="150%"><stop offset="0" stopColor="#fdf497"/><stop offset=".05" stopColor="#fdf497"/><stop offset=".45" stopColor="#fd5949"/><stop offset=".6" stopColor="#d6249f"/><stop offset=".9" stopColor="#285AEB"/></radialGradient></defs><rect width="24" height="24" rx="6" fill="url(#igg)"/><rect x="5" y="5" width="14" height="14" rx="4" fill="none" stroke="#fff" strokeWidth="1.6"/><circle cx="12" cy="12" r="3.3" fill="none" stroke="#fff" strokeWidth="1.6"/><circle cx="16.3" cy="7.7" r="1" fill="#fff"/></svg><//>`;
+const FbIcon=()=>html`<${Ico}><svg viewBox="0 0 24 24" className="h-full w-full" aria-hidden="true"><path fill="#1877F2" d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.1 10.13 24v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.8-4.7 4.55-4.7 1.32 0 2.7.24 2.7.24v2.97h-1.52c-1.5 0-1.96.93-1.96 1.89v2.26h3.33l-.53 3.49h-2.8V24C19.61 23.1 24 18.1 24 12.07z"/></svg><//>`;
+const MailIcon=()=>html`<${Ico}><svg viewBox="0 0 24 24" className="h-full w-full" aria-hidden="true" fill="none" stroke="#231F20" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg><//>`;
+const PhoneIcon=()=>html`<${Ico}><svg viewBox="0 0 24 24" className="h-full w-full" aria-hidden="true" fill="none" stroke="#231F20" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg><//>`;
+// compact = header strip (icon-only on phones, icon + text from sm up); default = stacked list
+const ContactLinks=({compact})=>{
+ const L=[
+  [IG,"@sweetaddictionscakery","Instagram",IgIcon,true],
+  [FB,"Sweet Addictions Cakery","Facebook",FbIcon,true],
+  ["mailto:"+EMAIL,EMAIL,"Email",MailIcon,false],
+  ["tel:+19092475709",PHONE,"Call",PhoneIcon,false]];
+ return html`<ul className=${compact?"flex flex-wrap items-center justify-center gap-x-5 gap-y-1 sm:justify-between":"flex flex-col items-start gap-2 text-sm"}>${L.map(([h,t,l,I,x])=>html`<li key=${l}>
+  <a href=${h} aria-label=${l+": "+t} ...${x?{target:"_blank",rel:"noopener noreferrer"}:{}} className="group inline-flex items-center gap-2 py-0.5 transition-colors hover:underline">
+   <${I} /><span className=${compact?"hidden sm:inline":"break-all"}>${t}</span>
+  </a></li>`)}</ul>`;
+};
+
+const Field=({label,children})=>html`<label className="block text-sm font-medium">${label}${children}</label>`;
+const Rush=({date})=>isRush(date)?html`<p className="mt-3 rounded-lg bg-blush p-3 text-sm">Rush Order Notice: Orders within 7 days may incur a $50+ rush fee depending on decor.</p>`:null;
+
+function FlavorFill({tiers,v,set}){
+ return html`<div className="grid gap-3 sm:grid-cols-2">
+  <${Field} label="Cake flavor">
+   <select className=${INP} value=${v.flavor} onChange=${e=>set({...v,flavor:e.target.value})}>
+    <option value="">Choose a flavor</option>
+    ${FLAV.map(f=>html`<option key=${f} value=${f} disabled=${f==="Tres Leches"&&tiers>1}>${f}${f==="Tres Leches"&&tiers>1?" (single tier only)":""}</option>`)}
+   </select><//>
+  <${Field} label="Cake filling">
+   <select className=${INP} value=${v.filling} onChange=${e=>set({...v,filling:e.target.value})}>
+    <option value="">Choose a filling</option>
+    ${FILL.map(f=>html`<option key=${f} value=${f}>${f}</option>`)}
+   </select><//>
+  ${tiers>1&&html`<p className="text-xs sm:col-span-2">Tres Leches is available for single-tiered cakes only.</p>`}
+ </div>`;
+}
+
+/* ---------- HEADER / FOOTER ---------- */
+function Header({page,go,count}){
+ return html`<header className="sticky top-0 z-20 border-b border-blush bg-cream/95 backdrop-blur" style=${{paddingTop:"env(safe-area-inset-top,0px)"}}>
+  <div className="bg-espresso text-xs text-cream"><div className="mx-auto max-w-6xl px-4 py-1.5"><${ContactLinks} compact=${true} /></div></div>
+  <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3">
+   <button onClick=${()=>go("home")} className="font-serif text-lg font-semibold sm:text-xl">Sweet Addictions Cakery</button>
+   <nav className="hidden gap-6 text-sm font-medium md:flex">
+    ${NAV.map(([id,l])=>html`<button key=${id} onClick=${()=>go(id)} className=${"pb-1 "+(page===id?"border-b-2 border-gold":"")}>${l}</button>`)}
+   </nav>
+   <button onClick=${()=>go("checkout")} className=${BTN+"bg-espresso text-cream !px-4 !py-2"} aria-label=${"Cart, "+count+" items"}>
+    Cart <span className="ml-2 rounded-full bg-gold px-2 text-xs text-espresso">${count}</span>
+   </button>
+  </div>
+  <nav className="flex gap-5 overflow-x-auto px-4 pb-2 text-sm font-medium md:hidden">
+   ${NAV.map(([id,l])=>html`<button key=${id} onClick=${()=>go(id)} className=${"whitespace-nowrap pb-1 "+(page===id?"border-b-2 border-gold":"")}>${l}</button>`)}
+  </nav>
+ </header>`;
+}
+const Footer=({go})=>html`<footer className="mt-20 bg-espresso pb-20 text-cream md:pb-0">
+ <div className="mx-auto grid max-w-6xl gap-6 px-4 py-10 text-sm sm:grid-cols-3">
+  <div><p className="font-serif text-lg">Sweet Addictions Cakery</p><p className="mt-2 opacity-80">Ontario, CA. Serving the Inland Empire & Los Angeles County.</p></div>
+  <div><p className="font-semibold">Contact</p>
+   <div className="mt-3"><${ContactLinks} /></div><p className="mt-3 opacity-80">Replies within 48 hours</p></div>
+  <div><p className="font-semibold">Explore</p><div className="mt-2 flex flex-col items-start gap-1">${NAV.map(([id,l])=>html`<button key=${id} onClick=${()=>go(id)} className="underline">${l}</button>`)}</div></div>
+ </div>
+</footer>`;
+
+/* ---------- HOME ---------- */
+function Home({go,pick}){
+ return html`<div>
+  <section className="mx-auto grid max-w-6xl items-center gap-10 px-4 pb-14 pt-12 md:grid-cols-5 md:pt-20">
+   <div className="md:col-span-3">
+    <h1 className="text-4xl font-semibold leading-tight sm:text-5xl md:text-6xl">Bespoke Wedding, Quinceañera & Celebration Cakes</h1>
+    <p className="mt-5 max-w-xl text-base leading-relaxed">Serving the Inland Empire & Los Angeles County • 5.0★ Google Rated • Custom Cakes & Dessert Packages</p>
+    <div className="mt-8 flex flex-wrap gap-3">
+     <button className=${B1} onClick=${()=>go("customize")}>Customize Your Cake</button>
+     <button className=${B2} onClick=${()=>go("menu")}>Explore Packages & Menu</button>
+    </div>
+   </div>
+   <div className="mx-auto flex flex-col items-center md:col-span-2" aria-hidden="true">
+    <div className="h-4 w-4 rounded-full bg-gold"></div>
+    <div className="h-14 w-24 rounded-t-xl border-2 border-gold bg-white"></div>
+    <div className="h-16 w-40 border-2 border-gold bg-blush"></div>
+    <div className="h-20 w-56 rounded-b-xl border-2 border-gold bg-white"></div>
+    <div className="h-2 w-64 rounded-full bg-gold"></div>
+   </div>
+  </section>
+
+  <section className="bg-white py-14"><div className="mx-auto max-w-6xl px-4">
+   <h2 className="text-3xl font-semibold">Cake & Sweets Packages</h2>
+   <p className="mt-2">All-in-one packages for your event, with basic buttercream decoration.</p>
+   <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    ${PKG.map(p=>html`<div key=${p.id} className="flex flex-col rounded-2xl bg-cream p-5">
+     <h3 className="text-xl font-semibold">${p.name.replace(" Cake Package","")}</h3>
+     <p className="mt-1 text-sm">Feeds ${p.feeds} people</p>
+     <p className="mt-3 font-serif text-3xl">${$(p.price)}</p>
+     <button className=${B1+" mt-auto self-start"} onClick=${()=>pick(p.id)}>Customize & Add</button>
+    </div>`)}
+   </div>
+  </div></section>
+
+  <section className="mx-auto max-w-4xl px-4 py-16 text-center">
+   <h2 className="text-3xl font-semibold">For the Love of Cake</h2>
+   <p className="mt-4 text-lg leading-relaxed">Wedding cakes, Quinceañera cakes, engagement cakes, birthday cakes, baby shower cakes, smash cakes, gender reveals, even divorce cakes. Any event in your life, Sweet Addictions Cakery will make sure to make it special just for you!</p>
+  </section>
+
+  <section className="bg-blush py-14"><div className="mx-auto max-w-6xl px-4">
+   <h2 className="text-3xl font-semibold">Verified 5.0★ Client Reviews</h2>
+   <div className="mt-8"><${Reviews} /></div>
+  </div></section>
+ </div>`;
+}
+
+/* ---------- MENU ---------- */
+function Menu({go,add,pick}){
+ const [tab,setTab]=useState(0);
+ const [open,setOpen]=useState(null);
+ const [v,setV]=useState({flavor:"",filling:""});
+ const tabs=["Cake & Sweets Packages","Custom Cakes","Flavors & Fillings","Dessert Menu"];
+ const addPkg=p=>{
+  add({key:"p"+Date.now(),name:p.name,price:p.price,qty:1,tiers:p.tiers,serves:p.serves,details:["Includes: "+p.items.join(", "),"Flavor: "+v.flavor,"Filling: "+v.filling]});
+  setOpen(null);setV({flavor:"",filling:""});go("checkout");
+ };
+ return html`<div className="mx-auto max-w-6xl px-4 py-10">
+  <h1 className="text-4xl font-semibold">Menu & Packages</h1>
+  <div className="mt-6 flex gap-2 overflow-x-auto pb-2" role="tablist">
+   ${tabs.map((t,i)=>html`<button key=${t} role="tab" aria-selected=${tab===i} onClick=${()=>setTab(i)} className=${"whitespace-nowrap rounded-full px-5 py-2 text-sm font-semibold "+(tab===i?"bg-espresso text-cream":"bg-white border border-gold/60")}>${t}</button>`)}
+  </div>
+
+  ${tab===0&&html`<div className="mt-6"><p className="text-sm">*Basic buttercream decoration only. Any fondant, fondant accents, or edible image will be additional cost.</p>
+   <div className="mt-5 grid gap-5 md:grid-cols-2">
+   ${PKG.map(p=>html`<div key=${p.id} className=${CARD}>
+    <div className="flex items-baseline justify-between gap-3"><h3 className="text-2xl font-semibold">${p.name}</h3><span className="font-serif text-2xl">${$(p.price)}</span></div>
+    <p className="text-sm">Feeds ${p.feeds} people</p>
+    <ul className="mt-3 list-disc pl-5 text-sm leading-relaxed">${p.items.map(i=>html`<li key=${i}>${i}</li>`)}</ul>
+    ${open===p.id?html`<div className="mt-4 border-t border-blush pt-4">
+      <${FlavorFill} tiers=${p.tiers} v=${v} set=${setV} />
+      <button className=${B1+" mt-4"} disabled=${!v.flavor||!v.filling} onClick=${()=>addPkg(p)}>Add to Cart</button>
+     </div>`:html`<button className=${B1+" mt-4"} onClick=${()=>{setOpen(p.id);setV({flavor:"",filling:""})}}>Select Package</button>`}
+   </div>`)}</div></div>`}
+
+  ${tab===1&&html`<div className="mt-6"><p className="text-sm">Starting prices, basic buttercream decoration.</p>
+   <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+   ${CAKES.map(c=>html`<div key=${c.id} className=${CARD}>
+    <h3 className="text-xl font-semibold">${c.name}</h3><p className="text-sm">Serves ${c.serves} people</p>
+    <p className="mt-2 font-serif text-3xl">${$(c.price)}</p>
+    <button className=${B1+" mt-4"} onClick=${()=>pick(c.id)}>Customize</button>
+   </div>`)}</div></div>`}
+
+  ${tab===2&&html`<div className="mt-6 grid gap-8 md:grid-cols-2">
+   <div className=${CARD}><h2 className="text-2xl font-semibold">10 Cake Flavors</h2>
+    <div className="mt-4 flex flex-wrap gap-2">${FLAV.map(f=>html`<span key=${f} className="rounded-full bg-blush px-3 py-1 text-sm">${f}${f==="Tres Leches"&&html` <em className="not-italic text-xs font-semibold">· Single Tiered Only</em>`}</span>`)}</div></div>
+   <div className=${CARD}><h2 className="text-2xl font-semibold">14 Cake Fillings</h2>
+    <div className="mt-4 flex flex-wrap gap-2">${FILL.map(f=>html`<span key=${f} className="rounded-full bg-blush px-3 py-1 text-sm">${f}</span>`)}</div></div>
+  </div>`}
+
+  ${tab===3&&html`<div className="mt-6"><p className="text-sm">*Price per dozen, basic decoration.</p>
+   <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+   ${DESS.map(([n,pr])=>html`<div key=${n} className=${CARD+" flex flex-col"}>
+    <h3 className="text-lg font-semibold">${n}</h3><p className="mt-1 font-serif text-2xl">${$(pr)}<span className="font-sans text-sm"> / dz</span></p>
+    <button className=${B2+" mt-4 self-start"} onClick=${()=>add({key:"d:"+n,name:n+" (dozen)",price:pr,qty:1,dessert:true,details:[]})}>+ Add Dozen to Order</button>
+   </div>`)}</div></div>`}
+ </div>`;
+}
+
+/* ---------- CUSTOMIZE ---------- */
+function Customize({add,go,pre}){
+ const [base,setBase]=useState(pre||"");
+ const [v,setV]=useState({flavor:"",filling:""});
+ const [f,setF]=useState({event:"",date:"",deco:"std",color:"",notes:""});
+ const [ex,setEx]=useState({});
+ const b=[...CAKES,...PKG].find(x=>x.id===base);
+ const tiers=b?b.tiers:1;
+ useEffect(()=>{if(tiers>1&&v.flavor==="Tres Leches")setV(o=>({...o,flavor:""}))},[tiers]);
+ const exTotal=DESS.reduce((s,[n,p])=>s+(ex[n]||0)*p,0);
+ const total=(b?b.price:0)+exTotal;
+ const ready=b&&v.flavor&&v.filling;
+ const submit=()=>{
+  const d=["Flavor: "+v.flavor,"Filling: "+v.filling];
+  if(f.event)d.push("Event: "+f.event);
+  if(f.date)d.push("Event date: "+f.date+(isRush(f.date)?" (rush)":""));
+  d.push(f.deco==="std"?"Decoration: Standard buttercream":"Decoration: Custom fondant / accents / edible image (quote adjusted)");
+  if(f.color)d.push("Color theme: "+f.color);
+  if(f.notes)d.push("Inscription/notes: "+f.notes);
+  add({key:"o"+Date.now(),name:b.name+(b.feeds?"":" custom cake"),price:b.price,qty:1,tiers:b.tiers,serves:b.serves,date:f.date,details:d});
+  DESS.forEach(([n,p])=>ex[n]&&add({key:"d:"+n,name:n+" (dozen)",price:p,qty:ex[n],dessert:true,details:[]}));
+  go("checkout");
+ };
+ const step=(n,t)=>html`<h2 className="text-2xl font-semibold">${n}. ${t}</h2>`;
+ return html`<div className="mx-auto max-w-6xl px-4 py-10">
+  <h1 className="text-4xl font-semibold">Custom Cake & Package Builder</h1>
+  <div className="mt-8 grid gap-8 lg:grid-cols-3">
+  <div className="space-y-6 lg:col-span-2">
+   <section className=${CARD}>${step(1,"Choose your base")}
+    <p className="mt-4 text-sm font-semibold">Custom cakes</p>
+    <div className="mt-2 grid gap-2 sm:grid-cols-2">${CAKES.map(c=>html`<label key=${c.id} className=${"flex cursor-pointer justify-between rounded-lg border p-3 text-sm "+(base===c.id?"border-espresso bg-blush":"border-gold/50")}><span><input type="radio" name="base" className="mr-2" checked=${base===c.id} onChange=${()=>setBase(c.id)} />${c.name} <span className="opacity-70">(serves ${c.serves})</span></span><b>${$(c.price)}</b></label>`)}</div>
+    <p className="mt-4 text-sm font-semibold">Cake & sweets packages</p>
+    <div className="mt-2 grid gap-2 sm:grid-cols-2">${PKG.map(c=>html`<label key=${c.id} className=${"flex cursor-pointer justify-between rounded-lg border p-3 text-sm "+(base===c.id?"border-espresso bg-blush":"border-gold/50")}><span><input type="radio" name="base" className="mr-2" checked=${base===c.id} onChange=${()=>setBase(c.id)} />${c.name.replace(" Cake Package","")} <span className="opacity-70">(feeds ${c.feeds})</span></span><b>${$(c.price)}</b></label>`)}</div>
+   </section>
+   <section className=${CARD}>${step(2,"Flavor & filling")}<div className="mt-4"><${FlavorFill} tiers=${tiers} v=${v} set=${setV} /></div></section>
+   <section className=${CARD}>${step(3,"Event & design")}
+    <div className="mt-4 grid gap-3 sm:grid-cols-2">
+     <${Field} label="Event type"><select className=${INP} value=${f.event} onChange=${e=>setF({...f,event:e.target.value})}><option value="">Choose an event</option>${EVENTS.map(x=>html`<option key=${x}>${x}</option>`)}</select><//>
+     <${Field} label="Event date"><input type="date" className=${INP} value=${f.date} onChange=${e=>setF({...f,date:e.target.value})} /><//>
+     <${Field} label="Decoration"><select className=${INP} value=${f.deco} onChange=${e=>setF({...f,deco:e.target.value})}><option value="std">Standard Buttercream Included</option><option value="fondant">Custom Fondant / Fondant Accents / Edible Image — Quote Adjusted</option></select><//>
+     <${Field} label="Color theme"><input className=${INP} placeholder="e.g. blush pink and gold" value=${f.color} onChange=${e=>setF({...f,color:e.target.value})} /><//>
+     <div className="sm:col-span-2"><${Field} label="Custom inscription / notes"><textarea rows="3" className=${INP} value=${f.notes} onChange=${e=>setF({...f,notes:e.target.value})}></textarea><//></div>
+    </div>
+    <${Rush} date=${f.date} />
+   </section>
+   <section className=${CARD}>${step(4,"Add extra desserts (per dozen)")}
+    <div className="mt-4 divide-y divide-blush">${DESS.map(([n,p])=>html`<div key=${n} className="flex items-center justify-between gap-3 py-2 text-sm">
+     <span>${n} <b>${$(p)}</b></span>
+     <span className="flex items-center gap-2">
+      <button className="h-8 w-8 rounded-full border border-espresso" aria-label=${"Remove a dozen of "+n} onClick=${()=>setEx({...ex,[n]:Math.max(0,(ex[n]||0)-1)})}>−</button>
+      <span className="w-6 text-center">${ex[n]||0}</span>
+      <button className="h-8 w-8 rounded-full border border-espresso" aria-label=${"Add a dozen of "+n} onClick=${()=>setEx({...ex,[n]:(ex[n]||0)+1})}>+</button>
+     </span></div>`)}</div>
+   </section>
+  </div>
+  <aside className="h-fit lg:sticky lg:top-28"><div className=${CARD}>
+   <h2 className="text-2xl font-semibold">Live Order Summary</h2>
+   <ul className="mt-4 space-y-2 text-sm">
+    <li>${b?html`<b>${b.name}</b> — ${$(b.price)}`:"Choose a base to begin."}</li>
+    ${v.flavor&&html`<li>Flavor: ${v.flavor}</li>`}${v.filling&&html`<li>Filling: ${v.filling}</li>`}
+    ${f.deco==="fondant"&&html`<li>Fondant / edible image: quote adjusted</li>`}
+    ${DESS.filter(([n])=>ex[n]).map(([n,p])=>html`<li key=${n}>${ex[n]} dz ${n} — ${$(ex[n]*p)}</li>`)}
+   </ul>
+   <p className="mt-4 border-t border-blush pt-4 text-sm">Estimated total</p>
+   <p className="font-serif text-4xl">${$(total)}</p>
+   <p className="text-xs">Final price is confirmed by Maira with your invoice.</p>
+   <button className=${B1+" mt-4 w-full"} disabled=${!ready} onClick=${submit}>Add Custom Order to Cart</button>
+   ${!ready&&html`<p className="mt-2 text-xs">Choose a base, flavor, and filling to continue.</p>`}
+  </div></aside>
+  </div>
+ </div>`;
+}
+
+/* ---------- ABOUT ---------- */
+function About(){
+ const [o,setO]=useState(0);
+ return html`<div className="mx-auto max-w-3xl px-4 py-10">
+  <h1 className="text-4xl font-semibold">Meet Maira</h1>
+  <p className="mt-6 leading-8" style=${{fontFamily:"'Playfair Display',Georgia,serif"}}>In 2011, I began my cake journey. My baby just turned 1 and I wanted her birthday to be really special, but couldn’t afford the nice fondant cakes. So I decided to make it myself. It didn’t turn out great, but it was definitely fun to make. My passion for cakes started to grow. After that, I started making cakes for friends and family, just for fun. Fast track to 2017, I had the luxury to become a stay-at-home mom to my 3 teens. Thanks to my husband, I was able to turn my hobby into a full time job. From weddings, smash cakes, gender reveals, baby showers, birthdays.. All of the celebrations in your life. My goal is to create cakes that my clients will always remember. To be part of the special celebrations in life is everything to me. I am grateful to those who have trusted me with such important days, and can’t wait to be a part of yours.</p>
+  <h2 className="mt-14 text-3xl font-semibold">Frequently Asked Questions</h2>
+  <div className="mt-5 space-y-3">${FAQ.map(([q,a],i)=>html`<div key=${q} className="rounded-xl border border-blush bg-white">
+   <button className="flex w-full items-center justify-between gap-4 p-4 text-left font-semibold" aria-expanded=${o===i} onClick=${()=>setO(o===i?-1:i)}>${q}<span className="text-xl text-gold">${o===i?"−":"+"}</span></button>
+   ${o===i&&html`<p className="px-4 pb-4 text-sm leading-relaxed">${a}</p>`}
+  </div>`)}</div>
+  <h2 className="mt-14 text-3xl font-semibold">Verified 5.0★ Client Reviews</h2>
+  <div className="mt-5"><${Reviews} cols="sm:grid-cols-2" /></div>
+  <h2 className="mt-14 text-3xl font-semibold">Contact Maira</h2>
+  <div className="mt-5 rounded-2xl bg-white p-6"><${ContactLinks} /></div>
+ </div>`;
+}
+
+/* ---------- PAYMENT ---------- */
+function PaymentSection({mode,deposit,total,disabled}){
+ if(mode==="ONLINE_CARD_CHECKOUT"){
+  /* STRIPE / SQUARE DEPOSIT BLOCK (activate by setting PAYMENT_MODE = "ONLINE_CARD_CHECKOUT")
+     1. Host this app where you can load https://js.stripe.com/v3/ (or Square Web Payments SDK).
+     2. Server endpoint (e.g. POST /create-payment-intent) accepts { amountCents } and returns a clientSecret.
+        Use Math.round(deposit*100) for the 50% deposit, or Math.round(total*100) for the full balance.
+     3. Mount Stripe Elements in the placeholder below and call stripe.confirmPayment({ elements, ... }) on submit.
+     The cart, totals, and customer form above stay unchanged. */
+  return html`<div className="rounded-xl border border-gold/60 p-4">
+   <p className="font-semibold">Pay online by card</p>
+   <p className="mt-1 text-sm">Deposit due now: ${$(deposit)} (or pay the full ${$(total)}).</p>
+   <div id="card-element" className="mt-3 rounded-lg bg-cream p-4 text-sm">Card fields mount here (Stripe Elements / Square).</div>
+   <button type="submit" className=${B1+" mt-4 w-full"} disabled=${disabled}>Pay Deposit ${$(deposit)}</button>
+  </div>`;
+ }
+ return html`<div className="rounded-xl bg-blush p-4">
+  <p className="text-sm leading-relaxed">Submit Order Request — Maira will confirm date availability within 48 hours (Monday morning for Fri–Sun requests) and send your invoice for the 50% deposit via Zelle, Venmo, or Cash.</p>
+  <button type="submit" className=${B1+" mt-4 w-full"} disabled=${disabled}>Submit Order Request</button>
+ </div>`;
+}
+
+/* ---------- CHECKOUT ---------- */
+function Checkout({cart,setQty,remove,clear,go}){
+ const [f,setF]=useState({name:"",phone:"",email:"",date:"",method:"Pickup",notes:"",miles:"within"});
+ const [done,setDone]=useState(null);
+ const sub=cart.reduce((s,i)=>s+i.price*i.qty,0);
+ const deposit=sub/2;
+ const bigCake=cart.some(i=>i.tiers>2&&i.serves>=60);
+ const canDeliver=bigCake&&f.miles==="within";
+ const method=canDeliver?f.method:"Pickup";
+ const date=f.date||(cart.find(i=>i.date)||{}).date||"";
+ const set=k=>e=>setF({...f,[k]:e.target.value});
+ const submit=e=>{
+  e.preventDefault();
+  const payload={customer:{...f,method,date},items:cart,subtotal:sub,deposit,paymentMode:PAYMENT_MODE};
+  // Wire this to your form backend (Formspree, Netlify Forms, your own API) so Maira receives it.
+  console.log("Order request",payload);
+  setDone(payload);clear();
+ };
+ if(done)return html`<div className="mx-auto max-w-xl px-4 py-16 text-center">
+  <h1 className="text-4xl font-semibold">Request received</h1>
+  <p className="mt-4">Thank you, ${done.customer.name}. Maira will confirm availability within 48 hours and send your invoice for the ${$(done.deposit)} deposit.</p>
+  <div className="mt-6 rounded-2xl bg-blush p-5 text-sm leading-relaxed">
+   <p className="font-semibold">Send your inspiration photos to Maira</p>
+   <div className="mt-3 flex justify-center text-left"><${ContactLinks} /></div>
+  </div>
+  <button className=${B1+" mt-6"} onClick=${()=>go("home")}>Back to Home</button></div>`;
+ if(!cart.length)return html`<div className="mx-auto max-w-xl px-4 py-16 text-center">
+  <h1 className="text-4xl font-semibold">Your cart is empty</h1>
+  <p className="mt-3">Start with a package or build a custom cake.</p>
+  <div className="mt-6 flex justify-center gap-3"><button className=${B1} onClick=${()=>go("customize")}>Customize Your Cake</button><button className=${B2} onClick=${()=>go("menu")}>View Menu</button></div></div>`;
+ return html`<div className="mx-auto max-w-6xl px-4 py-10">
+  <h1 className="text-4xl font-semibold">Your Cart</h1>
+  <form onSubmit=${submit} className="mt-8 grid gap-8 lg:grid-cols-5">
+   <div className="space-y-4 lg:col-span-3">
+    ${cart.map(i=>html`<div key=${i.key} className=${CARD+" !p-4"}>
+     <div className="flex justify-between gap-3"><h3 className="font-semibold">${i.name}</h3><b>${$(i.price*i.qty)}</b></div>
+     <ul className="mt-1 space-y-0.5 text-xs leading-relaxed">${i.details.map(d=>html`<li key=${d}>${d}</li>`)}</ul>
+     <div className="mt-3 flex items-center gap-3 text-sm">
+      <button type="button" className="h-8 w-8 rounded-full border border-espresso" aria-label="Decrease quantity" onClick=${()=>setQty(i.key,i.qty-1)}>−</button>
+      <span>${i.qty}</span>
+      <button type="button" className="h-8 w-8 rounded-full border border-espresso" aria-label="Increase quantity" onClick=${()=>setQty(i.key,i.qty+1)}>+</button>
+      <button type="button" className="ml-auto underline" onClick=${()=>remove(i.key)}>Remove</button>
+     </div></div>`)}
+    <div className=${CARD}>
+     <h2 className="text-2xl font-semibold">Your details</h2>
+     <div className="mt-4 grid gap-3 sm:grid-cols-2">
+      <${Field} label="Name"><input required className=${INP} value=${f.name} onChange=${set("name")} /><//>
+      <${Field} label="Phone"><input required type="tel" className=${INP} value=${f.phone} onChange=${set("phone")} /><//>
+      <${Field} label="Email"><input required type="email" className=${INP} value=${f.email} onChange=${set("email")} /><//>
+      <${Field} label="Event date"><input required type="date" className=${INP} value=${date} onChange=${set("date")} /><//>
+      ${bigCake&&html`<${Field} label="Event location"><select className=${INP} value=${f.miles} onChange=${set("miles")}><option value="within">Within 50 miles of Ontario, CA</option><option value="beyond">More than 50 miles away</option></select><//>`}
+      <${Field} label="Fulfillment method"><select className=${INP} value=${method} onChange=${set("method")}><option>Pickup</option>${canDeliver&&html`<option>Delivery</option>`}</select><//>
+      <div className="sm:col-span-2"><${Field} label="Notes"><textarea rows="3" className=${INP} value=${f.notes} onChange=${set("notes")}></textarea><//></div>
+     </div>
+     <${Rush} date=${date} />
+    </div>
+   </div>
+   <aside className="h-fit space-y-4 lg:sticky lg:top-28 lg:col-span-2"><div className=${CARD}>
+    <h2 className="text-2xl font-semibold">Order summary</h2>
+    <dl className="mt-4 space-y-2 text-sm">
+     <div className="flex justify-between"><dt>Estimated subtotal</dt><dd>${$(sub)}</dd></div>
+     <div className="flex justify-between font-semibold"><dt>50% deposit to book</dt><dd>${$(deposit)}</dd></div>
+     <div className="flex justify-between"><dt>Balance due later</dt><dd>${$(sub-deposit)}</dd></div>
+    </dl>
+    <p className="mt-4 rounded-lg bg-cream p-3 text-xs leading-relaxed">${canDeliver?"This order qualifies for delivery within 50 miles of Ontario, CA. The delivery fee depends on location.":"Pickup in Ontario, CA. Delivery is available for cakes over 2 tiers serving 60+ people, within 50 miles of Ontario."}</p>
+    <p className="mt-3 text-xs">Fondant, fondant accents, edible images, and rush fees are quoted separately on your invoice.</p>
+   </div>
+   <div className=${CARD}><${PaymentSection} mode=${PAYMENT_MODE} deposit=${deposit} total=${sub} disabled=${false} /></div>
+   </aside>
+  </form>
+ </div>`;
+}
+
+/* ---------- APP ---------- */
+function App(){
+ const [page,setPage]=useState(()=>PAGES.includes(location.hash.slice(1))?location.hash.slice(1):"home");
+ const [pre,setPre]=useState("");
+ const [cart,setCart]=useState(()=>{try{return JSON.parse(localStorage.getItem("sac-cart"))||[]}catch(e){return []}});
+ useEffect(()=>{try{localStorage.setItem("sac-cart",JSON.stringify(cart))}catch(e){}},[cart]);
+ useEffect(()=>{const h=()=>{const p=location.hash.slice(1);if(PAGES.includes(p))setPage(p)};addEventListener("hashchange",h);return()=>removeEventListener("hashchange",h)},[]);
+ const go=p=>{setPage(p);try{location.hash=p}catch(e){}window.scrollTo(0,0)};
+ const pick=id=>{setPre(id);go("customize")};
+ const add=it=>setCart(c=>c.some(x=>x.key===it.key)?c.map(x=>x.key===it.key?{...x,qty:x.qty+it.qty}:x):[...c,it]);
+ const setQty=(k,q)=>setCart(c=>q<1?c.filter(x=>x.key!==k):c.map(x=>x.key===k?{...x,qty:q}:x));
+ const remove=k=>setCart(c=>c.filter(x=>x.key!==k));
+ const count=cart.reduce((s,i)=>s+i.qty,0);
+ return html`<div>
+  <${Header} page=${page} go=${go} count=${count} />
+  <main>
+   ${page==="home"&&html`<${Home} go=${go} pick=${pick} />`}
+   ${page==="menu"&&html`<${Menu} go=${go} add=${add} pick=${pick} />`}
+   ${page==="customize"&&html`<${Customize} key=${pre} add=${add} go=${go} pre=${pre} />`}
+   ${page==="about"&&html`<${About} />`}
+   ${page==="checkout"&&html`<${Checkout} cart=${cart} setQty=${setQty} remove=${remove} clear=${()=>setCart([])} go=${go} />`}
+  </main>
+  <${Footer} go=${go} />
+  ${page!=="checkout"&&html`<div className="fixed inset-x-0 bottom-0 z-30 border-t border-gold/60 bg-cream/95 px-4 pt-2 md:hidden" style=${{paddingBottom:"calc(0.5rem + env(safe-area-inset-bottom,0px))"}}><button className=${B1+" w-full"} onClick=${()=>go("customize")}>Request Custom Quote</button></div>`}
+ </div>`;
+}
+ReactDOM.createRoot(document.getElementById("root")).render(html`<${App} />`);
+</script>
+</body>
+</html>
